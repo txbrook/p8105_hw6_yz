@@ -1,0 +1,14 @@
+---
+title: "p8105_hw6_yz4437.Rmd"
+author: "Yuchen Zhang"
+date: "2022-12-01"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+
+set.seed(1)
+```
+
+##Problem 2
