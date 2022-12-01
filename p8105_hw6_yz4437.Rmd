@@ -28,4 +28,16 @@ homicide_data = read_csv("data/homicide-data.csv") %>%
     )
 ```
 
+```{r}
+Baltimore_logistic = 
+  homicide_data %>%
+  filter(city == "Baltimore") %>% 
+  select(city_state, resolved, victim_age, victim_race, victim_sex) %>%
+  glm(resolved ~ victim_age + victim_race + victim_sex, data = ., family = binomial()) 
+
+#save as an R object
+save(Baltimore_logistic, file = "results/Baltimore_logistic.RData")
+
+```
+
 
