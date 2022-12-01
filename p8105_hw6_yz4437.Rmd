@@ -74,10 +74,12 @@ cities_df =
   select(city_state,estimate,`2.5 %`,`97.5 %`) %>% 
   #convert to odds scale
   mutate(
-    estimate=exp(estimate),
+    OR=exp(estimate),
     `2.5 %` =exp(`2.5 %`),
     `97.5 %` = exp(`97.5 %`)
-    )
+    ) %>% 
+    select(OR,`2.5 %`,`97.5 %`)
+
 cities_df 
 ```
 
@@ -89,5 +91,7 @@ ggplot(aes(x=fct_reorder(city_state, estimate), y=estimate))+
   labs(title = "Number of unsolved homocide among cities", )+xlab("City")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+
+##Problem 3
 
 
