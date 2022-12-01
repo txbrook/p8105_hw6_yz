@@ -12,3 +12,20 @@ set.seed(1)
 ```
 
 ##Problem 2
+
+
+```{r}
+homicide_data = read_csv("data/homicide-data.csv") %>% 
+  mutate(
+    city_state = str_c(city, state, sep = ", "),
+    resolved = as.numeric(disposition == "Closed by arrest")
+         ) %>% 
+  filter(!(city_state %in% c("Dallas, TX", "Phoenix, AZ", "Kansas City, MO","Tulsa, AL"))) %>%
+  filter(victim_race %in% c("White", "Black"), victim_age != "Unknown") %>% 
+  mutate(
+    victim_age = as.numeric(victim_age),
+    victim_race = fct_relevel(victim_race, "White")
+    )
+```
+
+
