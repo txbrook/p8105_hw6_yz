@@ -7,6 +7,7 @@ output: github_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(modelr)
 
 set.seed(1)
 ```
@@ -97,25 +98,38 @@ ggplot(aes(x=fct_reorder(city_state, estimate), y=estimate))+
 Load and clean the data for regression analysis
 ```{r}
 birthweight = read_csv("data/birthweight.csv", show_col_types = FALSE)
-birthweight 
+birthweight
 ```
 
 
 ```{r}
-birthweight_adpt = 
-  birthweight %>% 
-  mutate(
-    frace = recode(frace, `1` = "White", `2` = "Black", `3` = "Asian", `4` = "Puerto Rican", `8` = "Other", `9` = "Unknown"),
-    mrace = recode(mrace, `1` = "White", `2` = "Black", `3` = "Asian", `4` = "Puerto Rican", `8` = "Other"),
-    babysex = recode(babysex, `1` = "Male", `2` = "Female")
-    )%>% 
-    filter(frace!="Unknown") %>%
-  mutate(
-    frace = fct_relevel(frace, "White"),
-    mrace = fct_relevel(mrace, "White"),
-    babysex = fct_relevel(babysex,"Female")
-         )
-birthweight_adpt
+birthweight = birthweight %>% 
+  mutate(across(c(babysex, frace, malform, mrace), as.factor)) %>% 
+  select(bwt, everything()) 
+
+birthweight = na.omit(birthweight)
+sum(is.na(birthweight))
 ```
+
+```{r}
+full = lm(bwt ~ ., data = birthweight)
+```
+
+Plot of model residuals against fitted values:
+
+```{r}
+birthweight %>% 
+  add_predictions(full) %>% 
+  add_residuals(full) %>% 
+  ggplot(aes(x = pred, y = resid)) +
+  geom_point(alpha = .5)
+```
+
+
+```{r, warning=FALSE}
+cv_df =
+  crossv_mc(birthweight_adpt, 100) %>%
+```
+
 
 
