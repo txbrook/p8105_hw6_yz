@@ -168,64 +168,51 @@ From the plot, most of the cities have an odd ratio less than one, this means th
 
 ##Problem 3
 
-Load and clean the data for regression analysis
+Load and clean the data for regression analysis, convert numeric variable `babysex`, `frace`, `malform`, `mrace` to factors and omit missing data
 ```{r}
-birthweight = read_csv("data/birthweight.csv", show_col_types = FALSE)
-birthweight
-```
-
-
-```{r}
-birthweight = birthweight %>% 
+birthweight = read_csv("data/birthweight.csv", show_col_types = FALSE) %>% 
   mutate(across(c(babysex, frace, malform, mrace), as.factor)) %>% 
-  select(bwt, everything()) 
-
-birthweight = na.omit(birthweight)
-sum(is.na(birthweight))
+  select(bwt, everything()) %>% 
+  na.omit()
 ```
 
+Propose a regression model for birthweight. This model based on a data-driven model-building process which first assume that all variables are related, then select variables.
 ```{r}
 full = lm(bwt ~ ., data = birthweight)
+stepwiseModel = MASS::stepAIC(full, direction = "both", trace = FALSE)
+stepwiseModel$coefficients
 ```
 
-Plot of model residuals against fitted values:
-
+A plot of model residuals against fitted values
 ```{r}
 birthweight %>% 
-  add_predictions(full) %>% 
-  add_residuals(full) %>% 
+  add_predictions(stepwiseModel) %>% 
+  add_residuals(stepwiseModel) %>% 
   ggplot(aes(x = pred, y = resid)) +
   geom_point(alpha = .5)
 ```
 
-
-```{r, warning=FALSE}
-cv_df =
-  crossv_mc(birthweight, 100)
-```
-
-
-
+Compare my model to two others and plot the prediction error distribution for each model.
 ```{r, warning=FALSE}
 cv_df = 
-  cv_df %>% 
+  crossv_mc(birthweight, 100)
+
+cv_df = 
+cv_df %>% 
 mutate(
     train = map(train, as_tibble),
-    test = map(test, as_tibble))
-#then fit three models:
-cv_df = 
-  cv_df %>% 
-  mutate(
-    my_model  = map(train, ~full),
+    test = map(test, as_tibble)) %>% 
+mutate(
+    my_model  = map(train, ~stepwiseModel),
     main_effect_model  = map(train, ~lm(bwt ~ gaweeks + blength, data = .x)),
     interactive_model  = map(train, ~lm(bwt ~ bhead*blength*babysex, data = .x))) %>% 
   mutate(
     rmse_my_model = map2_dbl(my_model, test, ~rmse(model = .x, data = .y)),
     rmse_main_effect= map2_dbl(main_effect_model, test, ~rmse(model = .x, data = .y)),
     rmse_interactive = map2_dbl(interactive_model, test, ~rmse(model = .x, data = .y)))
-#Get the summarize the result:
+
 cv_df %>% 
-  select(starts_with("rmse")) %>% 
+select(starts_with("rmse")) %>% 
   pivot_longer(
     everything(),
     names_to = "model", 
@@ -234,3 +221,5 @@ cv_df %>%
   mutate(model = fct_inorder(model)) %>% 
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
+From the plot of prediction error distribution for each model, my model has the lowest RMSE which can be considered the best model of the three.
+
